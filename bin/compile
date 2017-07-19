@@ -4,8 +4,11 @@
 set -e # fail fast
 
 # parse params
+# BIN_DIR=$(cd $(dirname $0); pwd)
+# ROOT_DIR=$(dirname $BIN_DIR)
 BUILD_DIR=$1
 CACHE_DIR=$2
+ENV_DIR=$3
 
 # config
 S3_BUCKET="epic-heroku"
@@ -50,4 +53,4 @@ function vendor_binary() {
 
 echo "-----> Vendoring binaries"
 
-vendor_binary "libgirepository1.0-dev.deb"
+vendor_binary "libgirepository1.0-dev.deb" "$1/vendor/libgirepository1.0-dev"
