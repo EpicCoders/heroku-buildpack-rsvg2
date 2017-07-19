@@ -1,40 +1,53 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir>
 
-# Fail fast
-set -e
+set -e # fail fast
 
-# Debug
-set -x
-
+# parse params
 BUILD_DIR=$1
 CACHE_DIR=$2
-# VENDOR_DIR="$BUILD_DIR/vendor"
-# EXPORT_PATH="$PWD/export"
-# PROFILE_PATH="$BUILD_DIR/.profile.d/rapngasm.sh"
 
-# mkdir -p $(dirname $PROFILE_PATH)
+# config
+S3_BUCKET="epic-heroku"
 
-# function setDefaultEnv (){
-#   echo "export $1=/app/vendor/$2:\$$1" >> $PROFILE_PATH
-#   echo "export $1=/app/vendor/$2:\$$1" >> $EXPORT_PATH
-# }
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
 
-echo "====> Installing libgirepository1.0-dev via apt"
-apt install -V -y libgirepository1.0-dev
+function vendor_binary() {
+  binary="$1"
+  path="$2"
 
-# echo "=====> Inserting RAPNGAsm build system ☼"
-# curl "https://s3-ap-northeast-1.amazonaws.com/gensou/vendor.tar.bz2" -s -o - | tar xjf - -C "$BUILD_DIR"
-# cp -R "$VENDOR_DIR/bin" "/app/vendor/buildbin"
-# cp -R "$VENDOR_DIR/lib" "/app/vendor/lib"
-# cp -R "$VENDOR_DIR/include" "/app/vendor/include"
-# cp -R "$VENDOR_DIR/share" "/app/vendor/share"
+  echo "Fetching $binary" | indent
+  echo "Into path $path" | indent
 
-# setDefaultEnv PATH "buildbin"
-# echo "export PATH=/app/vendor/buildbin:$PATH" >> $EXPORT_PATH
-# setDefaultEnv LIBRARY_PATH "lib"
-# setDefaultEnv LD_LIBRARY_PATH "lib"
-# setDefaultEnv CPATH "include"
-# echo "export PKG_CONFIG_PATH=/app/vendor/lib/pkgconfig:$PKG_CONFIG_PATH" >> $EXPORT_PATH
-#setDefaultEnv XDG_DATA_DIRS "share"
-# echo "export XDG_DATA_DIRS=/app/vendor/share" >> $EXPORT_PATH
+  mkdir -p $path
+  package="https://s3.amazonaws.com/$S3_BUCKET/$binary"
+  curl $package -s -o - | tar xz -C $path -f -
+
+  echo "Exporting $binary build and include paths" | indent
+
+  if [ -d "$path/bin" ]; then
+    export PATH=$path/bin:$PATH
+  fi
+
+  if [ -d "$path/lib/pkgconfig" ]; then
+    # pkg-config should handle compiler options (if used)
+    export PKG_CONFIG_PATH="$path/lib/pkgconfig:$PKG_CONFIG_PATH"
+  fi
+
+  # standard paths
+  export CPPPATH="$path/include:$CPPPATH"
+  export CPATH="$path/include:$CPATH"
+  export CFLAGS="-I$path/include:$CFLAGS"
+  export LIBRARY_PATH="$path/lib:$LIBRARY_PATH"
+  export LD_LIBRARY_PATH="$path/lib:$LD_LIBRARY_PATH"
+}
+
+echo "-----> Vendoring binaries"
+
+vendor_binary "libgirepository1.0-dev.deb"
