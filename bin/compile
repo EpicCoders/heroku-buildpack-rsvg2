@@ -55,6 +55,10 @@ echo "-----> Vendoring binaries"
 
 vendor_binary "libgirepository1.0-dev.tar.gz" "$1/vendor/libgirepository1.0-dev"
 
+# node-canvas isn't using pkg-config, so we need to set non-standard paths
+export CPPPATH="$BUILD_DIR/vendor/libgirepository1.0-dev/include/gobject-introspection-1.0:$CPPPATH"
+export CPATH="$BUILD_DIR/vendor/libgirepository1.0-dev/include/gobject-introspection-1.0:$CPATH"
+
 echo "-----> Configuring build environment"
 
 cat <<EOF > export
