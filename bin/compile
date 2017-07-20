@@ -54,30 +54,3 @@ function vendor_binary() {
 echo "-----> Vendoring binaries"
 
 vendor_binary "libgirepository1.0-dev.tar.gz" "$1/vendor/libgirepository1.0-dev"
-
-# node-canvas isn't using pkg-config, so we need to set non-standard paths
-export CPPPATH="$BUILD_DIR/vendor/libgirepository1.0-dev/include/gobject-introspection-1.0:$CPPPATH"
-export CPATH="$BUILD_DIR/vendor/libgirepository1.0-dev/include/gobject-introspection-1.0:$CPATH"
-
-echo "-----> Configuring build environment"
-
-cat <<EOF > export
-export PATH="$PATH:\$PATH"
-export LD_LIBRARY_PATH="\$LD_LIBRARY_PATH:$LD_LIBRARY_PATH"
-export LIBRARY_PATH="\$LIBRARY_PATH:$LIBRARY_PATH"
-export PKG_CONFIG_PATH="\$PKG_CONFIG_PATH:$PKG_CONFIG_PATH"
-export CPPPATH="\$CPPPATH:$CPPPATH"
-export CPATH="\$CPATH:$CPATH"
-EOF
-
-echo "-----> Building runtime environment"
-mkdir -p $BUILD_DIR/.profile.d
-
-cat <<EOF > $BUILD_DIR/.profile.d/$BUILDPACK_NAME.sh
-export PATH="${PATH//$BUILD_DIR//app}:\$PATH"
-export LD_LIBRARY_PATH="\$LD_LIBRARY_PATH:${LD_LIBRARY_PATH//$BUILD_DIR//app}"
-export LIBRARY_PATH="\$LIBRARY_PATH:${LIBRARY_PATH//$BUILD_DIR//app}"
-export PKG_CONFIG_PATH="\$PKG_CONFIG_PATH:${PKG_CONFIG_PATH//$BUILD_DIR//app}"
-export CPPPATH="\$CPPPATH:${CPPPATH//$BUILD_DIR//app}"
-export CPATH="\$CPATH:${CPATH//$BUILD_DIR//app}"
-EOF
