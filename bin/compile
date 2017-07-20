@@ -53,4 +53,5 @@ function vendor_binary() {
 
 echo "-----> Vendoring binaries"
 
+vendor_binary "pkg-config-0.29.tar.gz" "$1/vendor/pkg-config-0.29"
 vendor_binary "libgirepository1.0-dev.tar.gz" "$1/vendor/libgirepository1.0-dev"
